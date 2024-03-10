@@ -41,6 +41,7 @@ const downloadAudio = async (videoUrl, res) => {
         audioStream.pipe(writeStream);
         var dur;
         writeStream.on('finish', () => {
+            console.log('audio downloaded successsfully');
             getAudioDurationInSeconds(filePath, ffprobePath).then((duration) => {
                 dur = Number(duration);
                 dur = dur/120;
