@@ -4,7 +4,7 @@ const cors = require('cors')
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const ffprobe = require('@ffprobe-installer/ffprobe');
+const ffprobe = require('node-ffprobe-installer');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath)
 const { getAudioDurationInSeconds } = require('get-audio-duration')
