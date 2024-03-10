@@ -4,7 +4,6 @@ const cors = require('cors')
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const ffprobe = require('node-ffprobe-installer');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath)
 const { getAudioDurationInSeconds } = require('get-audio-duration')
@@ -26,6 +25,9 @@ app.listen(port, () => {
 
 const downloadAudio = async (videoUrl, res) => {
     try {
+        const inputPath = `${ffmpegPath}`;
+        const ffprobePath = inputPath.replace(/ffmpeg/g, "ffprobe");
+
         const videoInfo = await ytdl.getInfo(videoUrl);
         const audioFormat = ytdl.chooseFormat(videoInfo.formats, { filter: 'audioonly' });
         
@@ -39,7 +41,7 @@ const downloadAudio = async (videoUrl, res) => {
         audioStream.pipe(writeStream);
         var dur;
         writeStream.on('finish', () => {
-            getAudioDurationInSeconds(filePath, ffprobe.path).then((duration) => {
+            getAudioDurationInSeconds(filePath, ffprobePath).then((duration) => {
                 dur = Number(duration);
                 dur = dur/120;
                 const main_dur = Math.floor(dur);
