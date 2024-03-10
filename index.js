@@ -69,19 +69,10 @@ const downloadAudio = async (videoUrl, res) => {
                     .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
                     .run();
             }
-            function waitForCompletion(time) {
-                if (time >= 15000) {
-                    console.log('Audio downloaded successfully');
-                    res.json({ "status": "success", "total_main": main_dur, "name": videoUrl });
-                    return;
-                }
-            
-                setTimeout(() => {
-                    waitForCompletion(time + 1000);
-                }, 1000);
-            }
-            
-            waitForCompletion(0);
+
+            console.log('Audio downloaded successfully');
+            res.json({ "status": "success", "total_main": main_dur, "name": videoUrl });
+
         });
 
         writeStream.on('error', (err) => {

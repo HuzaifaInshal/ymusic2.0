@@ -8,17 +8,30 @@
 </head>
 
 <body>
-    <button id="click">Clicke</button>
+    <button id="click">Fetch</button>
+    <button id="click2">Download</button>
     <script type="module">
+        var name,main_count;
         document.getElementById('click').addEventListener('click', () => {
+            fetchDataAndMerge()
+        })
+        document.getElementById('click2').addEventListener('click', () => {
             fetchDataAndMerge()
         })
 
         async function fetchDataAndMerge(){
             try {
                 const data = await fetchAudio();
-                const main_count = data.total_main;
-                const name = data.name;
+                main_count = data.total_main;
+                name = data.name;
+                
+            } catch (error) {
+                console.error('Error merging and downloading audio:', error);
+            }
+        }
+
+        async function downloadData(){
+            try {
                 let blobs = [];
 
                 // Fetch all audio blobs
@@ -44,7 +57,7 @@
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
             } catch (error) {
-                console.error('Error merging and downloading audio:', error);
+                console.log(error);
             }
         }
 
