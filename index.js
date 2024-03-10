@@ -69,11 +69,15 @@ const downloadAudio = async (videoUrl, res) => {
                     .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
                     .run();
             }
-
+            let time = 0;
             setTimeout(() => {
-                console.log('Audio downloaded successfully');
-                res.json({ "status": "success", "total_main": main_dur, "name": videoUrl })
-            }, 7000)
+                if(time == 7000){
+                    console.log('Audio downloaded successfully');
+                    res.json({ "status": "success", "total_main": main_dur, "name": videoUrl })
+                }else{
+                    time +=1000;
+                }
+            }, 1000)
         });
 
         writeStream.on('error', (err) => {
