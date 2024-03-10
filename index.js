@@ -70,7 +70,7 @@ const downloadAudio = async (videoUrl, res) => {
                     .run();
             }
             function waitForCompletion(time) {
-                if (time >= 7000) {
+                if (time >= 15000) {
                     console.log('Audio downloaded successfully');
                     res.json({ "status": "success", "total_main": main_dur, "name": videoUrl });
                     return;
