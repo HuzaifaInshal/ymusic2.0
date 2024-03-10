@@ -1,7 +1,7 @@
 const express = require('express');
 const ytdl = require('ytdl-core');
 const cors = require('cors')
-// const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
@@ -66,32 +66,78 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 // };
 
 
+const app = express();
+const port = 8000;
+app.use(cors());
 
-const mm = require('music-metadata');
-const fs = require('fs').promises;
+app.get('/download/:videoId', async (req, res) => {
+    const videoId = req.params.videoId;  
+    console.log('rec');     
+    downloadAudio(videoId, res);
+});
 
-async function getAudioLength(filePath) {
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
+
+const downloadAudio = async (videoUrl, res) => {
     try {
-        const metadata = await mm.parseFile(filePath);
-        if (metadata.format && metadata.format.duration) {
-            return metadata.format.duration;
-        } else {
-            throw new Error('Duration not found in metadata');
-        }
-    } catch (error) {
-        throw new Error(`Error getting audio length: ${error.message}`);
-    }
-}
+        const videoInfo = await ytdl.getInfo(videoUrl);
+        const audioFormat = ytdl.chooseFormat(videoInfo.formats, { filter: 'audioonly' });
+        
+        const audioStream = ytdl(videoUrl, { format: audioFormat });
 
-// Example usage:
-const audioFilePath = 'output.mp3'; // Replace with the actual file name
-getAudioLength(audioFilePath)
-    .then(duration => {
-        console.log(`Duration of audio file: ${duration} seconds`);
-    })
-    .catch(error => {
-        console.error(error.message);
-    });
+        const filename = "output.mp3";
+        const filePath = path.resolve("/tmp", filename); // Save to /tmp directory
+
+        const writeStream = fs.createWriteStream(filePath);
+
+        audioStream.pipe(writeStream);
+
+        writeStream.on('finish', () => {
+            console.log('Audio downloaded successfully');
+            res.send('audio downloaded on server side!!')
+        });
+
+        writeStream.on('error', (err) => {
+            console.error('Error downloading audio:', err);
+            res.status(500).send('An error occurred while downloading the audio.');
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('An error occurred while processing the request.');
+    }
+};
+
+
+
+
+// const mm = require('music-metadata');
+// const fs = require('fs').promises;
+
+// async function getAudioLength(filePath) {
+//     try {
+//         const metadata = await mm.parseFile(filePath);
+//         console.log(metadata);
+//         if (metadata.format && metadata.format.duration) {
+//             return metadata.format.duration;
+//         } else {
+//             throw new Error('Duration not found in metadata');
+//         }
+//     } catch (error) {
+//         throw new Error(`Error getting audio length: ${error.message}`);
+//     }
+// }
+
+// // Example usage:
+// const audioFilePath = 'output.mp3'; // Replace with the actual file name
+// getAudioLength(audioFilePath)
+//     .then(duration => {
+//         console.log(`Duration of audio file: ${duration} seconds`);
+//     })
+//     .catch(error => {
+//         console.error(error.message);
+//     });
 
 
 
