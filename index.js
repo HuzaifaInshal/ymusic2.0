@@ -6,7 +6,6 @@ const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath)
-const { getAudioDurationInSeconds } = require('get-audio-duration')
 
 
 const app = express();
@@ -14,8 +13,8 @@ const port = 8000;
 app.use(cors());
 
 app.get('/fetch/:videoId', async (req, res) => {
-    const videoId = req.params.videoId;  
-    console.log('rec');     
+    const videoId = req.params.videoId;
+    console.log('rec');
     downloadAudio(videoId, res);
 });
 
@@ -30,7 +29,7 @@ const downloadAudio = async (videoUrl, res) => {
 
         const videoInfo = await ytdl.getInfo(videoUrl);
         const audioFormat = ytdl.chooseFormat(videoInfo.formats, { filter: 'audioonly' });
-        
+
         const audioStream = ytdl(videoUrl, { format: audioFormat });
 
         const filename = `${videoUrl}.mp3`;
@@ -42,41 +41,41 @@ const downloadAudio = async (videoUrl, res) => {
         var dur;
         writeStream.on('finish', () => {
             console.log('audio downloaded successsfully');
-            getAudioDurationInSeconds(filePath, ffprobePath).then((duration) => {
-                dur = Number(duration);
-                dur = dur/120;
-                const main_dur = Math.floor(dur);
-                var done_til_now = 0;
-                for (i=1;i<=main_dur;i++){
-                if(i==1){
+            const duration = videoInfo.player_response.videoDetails.lengthSeconds;
+            console.log(duration);
+            dur = Number(duration);
+            dur = dur / 120;
+            const main_dur = Math.floor(dur);
+            var done_til_now = 0;
+            for (i = 1; i <= main_dur; i++) {
+                if (i == 1) {
                     ffmpeg(filePath)
-                      .inputOptions('-t 120')
-                      .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
-                      .run()
-                      done_til_now = 120;
-                }else{
+                        .inputOptions('-t 120')
+                        .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                        .run()
+                    done_til_now = 120;
+                } else {
                     ffmpeg(filePath)
-                    .inputOptions(`-ss ${done_til_now}`) 
-                    .outputOptions(`-t 120`) 
-                    .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
-                    .run();
-                    done_til_now+=120;
+                        .inputOptions(`-ss ${done_til_now}`)
+                        .outputOptions(`-t 120`)
+                        .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                        .run();
+                    done_til_now += 120;
                 }
             }
-            if(done_til_now != dur){
+            if (done_til_now != dur) {
                 ffmpeg(filePath)
-                .inputOptions(`-ss ${done_til_now}`)
-                .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
-                .run();
+                    .inputOptions(`-ss ${done_til_now}`)
+                    .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                    .run();
             }
-            
-            setTimeout(()=>{
+
+            setTimeout(() => {
                 console.log('Audio downloaded successfully');
-                res.json({"status":"success","total_main":main_dur,"name":videoUrl})
-            },10000)
-        })
+                res.json({ "status": "success", "total_main": main_dur, "name": videoUrl })
+            }, 10000)
         });
-        
+
         writeStream.on('error', (err) => {
             console.error('Error downloading audio:', err);
             res.status(500).send('An error occurred while downloading the audio.');
@@ -104,14 +103,14 @@ app.get('/download', async (req, res) => {
 //   .run()
 
 //from 60 to 120
-  // ffmpeg('output.mp3')
-  // .inputOptions('-ss 60') // Start from 60 seconds
-  // .outputOptions('-t 60') // Duration of 60 seconds
-  // .output('output3.mp3')
-  // .run();
+// ffmpeg('output.mp3')
+// .inputOptions('-ss 60') // Start from 60 seconds
+// .outputOptions('-t 60') // Duration of 60 seconds
+// .output('output3.mp3')
+// .run();
 
-  //from 60 to end
-  // ffmpeg('output.mp3')
-  // .inputOptions('-ss 60') // Start from 60 seconds
-  // .output('output2.mp3')
-  // .run();
+//from 60 to end
+// ffmpeg('output.mp3')
+// .inputOptions('-ss 60') // Start from 60 seconds
+// .output('output2.mp3')
+// .run();

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="click">Clicke</button>
+    <script type="module">
+        document.getElementById('click').addEventListener('click', () => {
+            fetchDataAndMerge()
+        })
+
+        async function fetchDataAndMerge(){
+            try {
+                const data = await fetchAudio();
+                const main_count = data.total_main;
+                const name = data.name;
+                let blobs = [];
+
+                // Fetch all audio blobs
+                for (let i = 1; i <= main_count + 1; i++){
+                    const blob = await fetchAudioBlob(name, i);
+                    blobs.push(blob);
+                }
+
+                // Merge audio blobs
+                const mergedBlob = new Blob(blobs, { type: 'audio/mp3' });
+                const url = window.URL.createObjectURL(mergedBlob);
+
+                // Create a temporary link element
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'merged_audio.mp3'; // Default file name
+                document.body.appendChild(link);
+
+                // Simulate click to trigger download
+                link.click();
+
+                // Clean up
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error merging and downloading audio:', error);
+            }
+        }
+
+        async function fetchAudioBlob(name, i){
+            try {
+                const namefinal = `${name}${i}`;
+                // const response = await fetch(`http://localhost:8000/download?name=${namefinal}`);
+                const response = await fetch(`https://ymusic2.vercel.app/download?name=${namefinal}`);
+                return await response.blob();
+            } catch (error) {
+                console.error('Error fetching audio blob:', error);
+                throw error;
+            }
+        }
+
+        async function fetchAudio(){
+            try {
+                // const data = await fetch('http://localhost:8000/fetch/kXYiU_JCYtU');
+                const data = await fetch('https://ymusic2.vercel.app/fetch/kXYiU_JCYtU');
+                return await data.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                throw error;
+            }
+        }
+
+
+
+
+
+
+        // import Crunker from 'https://unpkg.com/crunker@latest/dist/crunker.esm.js';
+        // let crunker = new Crunker();
+        // async function fetchDataAndMerge() {
+        //     try {
+        //         const data = await fetchAudio();
+        //         const main_count = data.total_main;
+        //         const name = data.name;
+        //         let blobs = [];
+
+        //         // Fetch all audio blobs
+        //         for (let i = 1; i <= main_count + 1; i++) {
+        //             const blob = await fetchAudioBlob(name, i);
+        //             blobs.push(blob);
+        //         }
+        //         doTheWork('concatAudio', 'concat')
+
+        //         async function doTheWork(task, filename) {
+        //             // const { files } = inputAudios;
+
+        //             if (blobs.length) {
+        //                 const crunker = new Crunker({ sampleRate: 48000 });
+        //                 const buffers = await Promise.all(
+        //                     Array.from(blobs).map(async (file) => crunker._context.decodeAudioData(await file.arrayBuffer()))
+        //                 );
+        //                 const merged = await crunker[task](buffers);
+        //                 const output = await crunker.export(merged, 'audio/mp3');
+        //                 await crunker.download(output.blob, filename);
+        //             }
+        //         }
+        //     } catch (error) {
+        //         console.error('Error merging and downloading audio with CrunkerJS:', error);
+        //         alert('Error merging and downloading audio with CrunkerJS');
+        //     }
+        // }
+        // async function fetchAudioBlob(name, i) {
+        //     try {
+        //         const namefinal = `${name}${i}`;
+        //         const response = await fetch(`http://localhost:8000/download?name=${namefinal}`);
+        //         return await response.blob();
+        //     } catch (error) {
+        //         console.error('Error fetching audio blob:', error);
+        //         throw error;
+        //     }
+        // }
+
+        // async function fetchAudio() {
+        //     try {
+        //         const data = await fetch('http://localhost:8000/fetch/kXYiU_JCYtU');
+        //         return await data.json();
+        //     } catch (error) {
+        //         console.error('Error fetching data:', error);
+        //         throw error;
+        //     }
+        // }
+
+
+    </script>
+
+    </script>
+
+
+
+</body>
+
+</html>
