@@ -73,7 +73,7 @@ const downloadAudio = async (videoUrl, res) => {
             setTimeout(() => {
                 console.log('Audio downloaded successfully');
                 res.json({ "status": "success", "total_main": main_dur, "name": videoUrl })
-            }, 5000)
+            }, 7000)
         });
 
         writeStream.on('error', (err) => {
