@@ -4,73 +4,17 @@ const cors = require('cors')
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const ffprobe = require('@ffprobe-installer/ffprobe');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-ffmpeg.setFfmpegPath(ffmpegPath);
-
-// const app = express();
-// const port = 8000;
-// app.use(cors());
-
-// app.get('/download/:videoId', async (req, res) => {
-//     const videoId = req.params.videoId;  
-//     console.log('rec');     
-//     downloadAudio(videoId,res);
-// });
-
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
-
-// const downloadAudio = async (videoUrl, res) => {
-//     try {
-//         const videoInfo = await ytdl.getInfo(videoUrl);
-//         const audioFormat = ytdl.chooseFormat(videoInfo.formats, { filter: 'audioonly' });
-        
-//         const audioStream = ytdl(videoUrl, { format: audioFormat });
-
-//         const filename = "output.mp3";
-//         const filePath = path.resolve(__dirname, filename);
-
-//         const writeStream = fs.createWriteStream(filePath);
-
-//         audioStream.pipe(writeStream);
-
-//         writeStream.on('finish', () => {
-//             console.log('Audio downloaded successfully');
-//             // res.sendFile(filePath, (err) => {
-//             //     if (err) {
-//             //         console.error('Error sending file:', err);
-//             //         res.status(500).send('An error occurred while sending the file.');
-//             //     } else {
-//             //         console.log('File sent successfully');
-//             //         fs.unlink(filePath, (err) => {
-//             //             if (err) {
-//             //                 console.error('Error deleting file:', err);
-//             //             } else {
-//             //                 console.log('File deleted successfully');
-//             //             }
-//             //         });
-//             //     }
-//             // });
-//             res.send('audio maked!!')
-//         });
-
-//         writeStream.on('error', (err) => {
-//             console.error('Error downloading audio:', err);
-//             res.status(500).send('An error occurred while downloading the audio.');
-//         });
-//     } catch (error) {
-//         console.error('Error:', error);
-//         res.status(500).send('An error occurred while processing the request.');
-//     }
-// };
+ffmpeg.setFfmpegPath(ffmpegPath)
+const { getAudioDurationInSeconds } = require('get-audio-duration')
 
 
 const app = express();
 const port = 8000;
 app.use(cors());
 
-app.get('/download/:videoId', async (req, res) => {
+app.get('/fetch/:videoId', async (req, res) => {
     const videoId = req.params.videoId;  
     console.log('rec');     
     downloadAudio(videoId, res);
@@ -87,18 +31,49 @@ const downloadAudio = async (videoUrl, res) => {
         
         const audioStream = ytdl(videoUrl, { format: audioFormat });
 
-        const filename = "output.mp3";
+        const filename = `${videoUrl}.mp3`;
         const filePath = path.resolve("/tmp", filename); // Save to /tmp directory
 
         const writeStream = fs.createWriteStream(filePath);
 
         audioStream.pipe(writeStream);
-
+        var dur;
         writeStream.on('finish', () => {
-            console.log('Audio downloaded successfully');
-            res.send('audio downloaded on server side!!')
+            getAudioDurationInSeconds(filePath, ffprobe.path).then((duration) => {
+                dur = Number(duration);
+                dur = dur/120;
+                const main_dur = Math.floor(dur);
+                var done_til_now = 0;
+                for (i=1;i<=main_dur;i++){
+                if(i==1){
+                    ffmpeg(filePath)
+                      .inputOptions('-t 120')
+                      .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                      .run()
+                      done_til_now = 120;
+                }else{
+                    ffmpeg(filePath)
+                    .inputOptions(`-ss ${done_til_now}`) 
+                    .outputOptions(`-t 120`) 
+                    .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                    .run();
+                    done_til_now+=120;
+                }
+            }
+            if(done_til_now != dur){
+                ffmpeg(filePath)
+                .inputOptions(`-ss ${done_til_now}`)
+                .output(path.resolve("/tmp", `${videoUrl}${i}.mp3`))
+                .run();
+            }
+            
+            setTimeout(()=>{
+                console.log('Audio downloaded successfully');
+                res.json({"status":"success","total_main":main_dur,"name":videoUrl})
+            },10000)
+        })
         });
-
+        
         writeStream.on('error', (err) => {
             console.error('Error downloading audio:', err);
             res.status(500).send('An error occurred while downloading the audio.');
@@ -109,35 +84,13 @@ const downloadAudio = async (videoUrl, res) => {
     }
 };
 
+app.get('/download', async (req, res) => {
+    const audioName = req.query.name;
+    res.sendFile(path.resolve("/tmp", `${audioName}.mp3`))
+});
 
 
 
-// const mm = require('music-metadata');
-// const fs = require('fs').promises;
-
-// async function getAudioLength(filePath) {
-//     try {
-//         const metadata = await mm.parseFile(filePath);
-//         console.log(metadata);
-//         if (metadata.format && metadata.format.duration) {
-//             return metadata.format.duration;
-//         } else {
-//             throw new Error('Duration not found in metadata');
-//         }
-//     } catch (error) {
-//         throw new Error(`Error getting audio length: ${error.message}`);
-//     }
-// }
-
-// // Example usage:
-// const audioFilePath = 'output.mp3'; // Replace with the actual file name
-// getAudioLength(audioFilePath)
-//     .then(duration => {
-//         console.log(`Duration of audio file: ${duration} seconds`);
-//     })
-//     .catch(error => {
-//         console.error(error.message);
-//     });
 
 
 
