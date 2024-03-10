@@ -76,6 +76,7 @@ const downloadAudio = async (videoUrl, res) => {
                     res.json({ "status": "success", "total_main": main_dur, "name": videoUrl })
                 }else{
                     time +=1000;
+                    console.log(time);
                 }
             }, 1000)
         });
